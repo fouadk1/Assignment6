@@ -21,6 +21,7 @@ pipeline {
         stage("image build"){
             steps {
                 echo "building docker image"
+		sh "ls"
                 sh "docker build -t position-simulator:${commit_id} ."
                 echo "docker image build"
             }
