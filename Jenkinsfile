@@ -21,7 +21,6 @@ pipeline {
        stage('Image Build') {
             steps {
                 echo 'Building....'
-                sh 'scp -r -i $(minikube ssh-key) ./*  docker@$(minikube ip):~/'
                 sh "minikube ssh 'docker build -t position-simulator:${commit_id} ./'"
                 echo 'build complete'
             }
