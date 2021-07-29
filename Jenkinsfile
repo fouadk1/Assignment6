@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo "building docker image"
 		sh "ls target/"
-                sh "docker build -t position-simulator:${commit_id} ./target/"
+                sh "docker build -t position-simulator:${commit_id} ."
                 echo "docker image build"
             }
         }
