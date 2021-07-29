@@ -1,35 +1,45 @@
-def commit_id 
+def commit_id
 pipeline {
     agent any
+
+
     stages {
-        stage('preparation') {
+        stage('Preparation') {
             steps {
-                checkout scm 
-                sh "git prev-parse --short HEAD > .git/commit-id"
+                checkout scm
+                sh "git rev-parse --short HEAD > .git/commit-id"
                 script {
                     commit_id = readFile('.git/commit-id').trim()
                 }
             }
         }
-        stage('build') {
+        stage('Code Quality') {
             steps {
-                echo 'building maven workload'
-                sh "mvn clean install"
-                echo "build complete"
+                withSonarQubeEnv('code-quality'){
+                    sh 'mvn sonar:sonar'
+                }
             }
         }
-        stage("image build"){
+        stage('Build') {
             steps {
-                echo "building docker image"
-                sh "docker build -t position-simulator:${commit_id} ."
-                echo "docker image build"
+                echo 'Building....'
+                sh 'mvn clean install'
+                echo 'build complete'
             }
-
         }
-        stage("deploy") {
+        stage('Image Build') {
             steps {
+                echo 'Building....'
+                sh 'scp -r -i $(minikube ssh-key) ./*  docker@$(minikube ip):~/'
+                sh "minikube ssh 'docker build -t position-simulator:${commit_id} ./'"
+                echo 'build complete'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying to Kubernetes'
                 sh "sed -i -r 's|richardchesterwood/k8s-fleetman-position-simulator:release2|position-simulator:${commit_id}|' workloads.yaml"
-                sh "kubectl apply -f workloads.yaml"
+                sh 'kubectl apply -f workloads.yaml'
             }
         }
     }
