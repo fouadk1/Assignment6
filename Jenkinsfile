@@ -18,18 +18,17 @@ pipeline {
                 echo "build complete"
             }
         }
-       stage('Image Build') {
+        stage("image build"){
             steps {
-                echo 'Building....'
-                sh "minikube ssh 'docker build -t position-simulator:${commit_id} ./'"
-                echo 'build complete'
+                echo "building docker image"
+                sh "docker build -t position-simulator:${commit_id} ."
+                echo "docker image build"
             }
         }
-        stage('Deploy') {
+        stage("deploy") {
             steps {
-                echo 'Deploying to Kubernetes'
                 sh "sed -i -r 's|richardchesterwood/k8s-fleetman-position-simulator:release2|position-simulator:${commit_id}|' workloads.yaml"
-                sh 'kubectl apply -f workloads.yaml'
+                sh "kubectl apply -f workloads.yaml"
             }
         }
     }
